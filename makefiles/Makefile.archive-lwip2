@@ -1,0 +1,6 @@
+OBJ = $(shell find $(BUILD) -name "*.o")
+
+$(BUILD)/$(LWIP_LIB): $(OBJ)
+	$(AR) cru $@ $?
+
+all: $(BUILD)/$(LWIP_LIB)

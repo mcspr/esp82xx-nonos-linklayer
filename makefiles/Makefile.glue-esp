@@ -1,17 +1,23 @@
+.PHONY: all
 
-OBJ = \
-	$(patsubst %.c,$(BUILD)/%.o,$(wildcard glue-esp/*.c))
+ifndef SDK
+$(error SDK must point to our Core sdk folder)
+endif
 
-ifeq ($(LWIP_ESP),)
+ifndef LWIP_ESP
 $(error LWIP_ESP must point to espressif sdk lwip/include)
 endif
 
-BUILD_INCLUDES = -I$(BUILD) -I$(SDK)/include -I$(LWIP_ESP) -Iglue
+SRC = $(wildcard glue-esp/*.c)
+
+BUILD_INCLUDES = -I$(BUILD_ROOT) -I$(SDK)/include -I$(LWIP_ESP) -I$(ROOT)/glue
 BUILD_FLAGS += -DLWIP14GLUE
 
-include makefiles/Makefile.defs
-include makefiles/Makefile.rules
+include makefiles/include/defs.mk
+include makefiles/include/rules.mk
 
 -include $(BUILD)/glue-esp/*.d
 
-all: $(LWIP_LIB)
+all: $(OBJ)
+
+$(OBJ): $(SRC) $(BUILD_ROOT)/user_config.h $(BUILD_ROOT)/lwip-err-t.h $(BUILD_ROOT)/lwip-git-hash.h

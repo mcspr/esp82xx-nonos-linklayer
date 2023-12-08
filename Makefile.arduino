@@ -1,22 +1,83 @@
-PREFIX ?= ../../../xtensa-lx106-elf
+ifndef PREFIX
+$(error "$$PREFIX must be set to esp8266 Core root directory")
+endif
 
-%:
-	for v6 in 0 1; do \
-	for mss in 536 1460; do \
-	for feat in 0 1; do \
-		test \( $$feat = 0 \) -a \( $$v6 = 1 \) && continue; \
-		featname= ;\
-		test $$feat = 1 && featname=-feat ;\
-		make -f makefiles/Makefile.build-lwip2 \
-			target=arduino \
-			DEFINE_TARGET=ARDUINO \
-			SDK=../.. \
-			LWIP_ESP=glue-esp/lwip-1.4-arduino/include \
-			LWIP_LIB=liblwip$$((2+4*v6))-$$mss$$featname.a \
-			LWIP_LIB_RELEASE=../../lib/liblwip$$((2+4*v6))-$$mss$$featname.a \
-			LWIP_INCLUDES_RELEASE=../include \
-			TOOLS=$(abspath $(wildcard $(PREFIX)))/bin/xtensa-lx106-elf- \
-			TCP_MSS=$$mss LWIP_FEATURES=$$feat LWIP_IPV6=$$v6 \
-			BUILD=build-$$mss$$featname-v$$((4+2*v6)) \
-			$@ ; \
-	done; done; done
+export ROOT = $(shell git rev-parse --show-toplevel)
+
+export target = arduino
+export DEFINE_TARGET = ARDUINO
+
+export TOOLS ?= $(PREFIX)/tools/xtensa-lx106-elf/bin/xtensa-lx106-elf-
+export SDK ?= $(PREFIX)/tools/sdk
+export LIBS ?= $(PREFIX)/tools/sdk/libs
+
+export LWIP_ROOT ?= $(ROOT)/lwip2-src
+
+export LWIP_ESP ?= glue-esp/lwip-1.4-arduino/include
+export BUILD_ROOT ?= $(ROOT)/build
+
+TARGETS = liblwip2-536.a liblwip2-536-feat.a liblwip6-536-feat.a liblwip2-1460.a liblwip2-1460-feat.a liblwip6-1460-feat.a 
+.PHONY: .prepare clean $(TARGETS)
+
+include makefiles/Makefile.prepare-lwip2
+
+.prepare: $(LWIP_ROOT)/.patched $(LWIP_ROOT)/.git/HEAD $(BUILD_ROOT)/lwip-err-t.h $(BUILD_ROOT)/lwip-git-hash.h
+
+liblwip2-536.a: .prepare
+	$(MAKE) -f makefiles/Makefile.build-lwip2 \
+		LWIP_LIB=$@ \
+		BUILD=$(BUILD_ROOT)/build_$@ \
+		TCP_MSS=536 \
+		LWIP_FEATURES=0 \
+		LWIP_IPV6=0 \
+		all
+
+liblwip2-1460.a:
+	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
+		LWIP_LIB=$@ \
+		BUILD=$(BUILD_ROOT)/build_$@ \
+		TCP_MSS=1460 \
+		LWIP_FEATURES=0 \
+		LWIP_IPV6=0 \
+		all
+
+liblwip2-536-feat.a:
+	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
+		LWIP_LIB=$@ \
+		BUILD=$(BUILD_ROOT)/build_$@ \
+		TCP_MSS=536 \
+		LWIP_FEATURES=1 \
+		LWIP_IPV6=0 \
+		all
+
+liblwip2-1460-feat.a:
+	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
+		LWIP_LIB=$@ \
+		BUILD=$(BUILD_ROOT)/build_$@ \
+		TCP_MSS=1460 \
+		LWIP_FEATURES=1 \
+		LWIP_IPV6=0 \
+		all
+
+liblwip6-536-feat.a:
+	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
+		LWIP_LIB=$@ \
+		BUILD=$(BUILD_ROOT)/build_$@ \
+		TCP_MSS=536 \
+		LWIP_FEATURES=1 \
+		LWIP_IPV6=1 \
+		all
+
+liblwip6-1460-feat.a:
+	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
+		LWIP_LIB=$@ \
+		BUILD=$(BUILD_ROOT)/build_$@ \
+		TCP_MSS=1460 \
+		LWIP_FEATURES=1 \
+		LWIP_IPV6=1 \
+		all
+
+clean:
+	rm -r $(BUILD_ROOT)
+
+all: $(TARGETS)
