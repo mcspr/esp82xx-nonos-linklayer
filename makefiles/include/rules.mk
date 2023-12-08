@@ -17,10 +17,9 @@ $(OBJ): $(BUILD)/%.o: %.c
         $< -o $@
 
 DIRS := $(sort $(dir $(OBJ)))
+$(info $(DIRS))
 $(DIRS): $(SRC)
 	mkdir -p $@
 
-.mkdir: $(DIRS)
-
-$(OBJ): .mkdir
+$(OBJ): | $(DIRS)
 all: $(BUILD) $(OBJ)
