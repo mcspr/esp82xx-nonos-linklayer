@@ -5,9 +5,6 @@ GLUE_GIT_HEAD = $(ROOT)/.git/HEAD
 LWIP_GIT_HEAD = $(LWIP_ROOT)/.git/HEAD
 LWIP_GIT_REPO = https://github.com/lwip-tcpip/lwip
 
-$(LWIP_LIB_RELEASE): $(BUILD)/$(LWIP_LIB)
-	@cp $< $@
-
 .PHONY: glue-esp glue lwip2 archive
 
 glue-esp:
@@ -20,7 +17,7 @@ lwip2: glue-esp glue-lwip
 	$(MAKE) -C $(LWIP_ROOT)/src -f $(ROOT)/makefiles/Makefile.lwip2 all
 
 archive: lwip2
-	$(MAKE) -f makefiles/Makefile.archive-lwip2
+	$(MAKE) -f makefiles/Makefile.archive-lwip2 $(BUILD_ROOT)/$(LWIP_LIB)
 
 all: archive
 

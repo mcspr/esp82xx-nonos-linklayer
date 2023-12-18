@@ -23,61 +23,69 @@ include makefiles/Makefile.prepare-lwip2
 
 .prepare: $(LWIP_ROOT)/.patched $(LWIP_ROOT)/.git/HEAD $(BUILD_ROOT)/lwip-err-t.h $(BUILD_ROOT)/lwip-git-hash.h
 
-liblwip2-536.a: .prepare
+$(BUILD_ROOT)/liblwip2-536.a: .prepare
 	$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		LWIP_LIB=$@ \
-		BUILD=$(BUILD_ROOT)/build_$@ \
+		LWIP_LIB=$(@F) \
+		BUILD=$(BUILD_ROOT)/build_$(@F) \
 		TCP_MSS=536 \
 		LWIP_FEATURES=0 \
 		LWIP_IPV6=0 \
 		all
 
-liblwip2-1460.a:
+$(BUILD_ROOT)/liblwip2-1460.a: .prepare
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		LWIP_LIB=$@ \
-		BUILD=$(BUILD_ROOT)/build_$@ \
+		LWIP_LIB=$(@F) \
+		BUILD=$(BUILD_ROOT)/build_$(@F) \
 		TCP_MSS=1460 \
 		LWIP_FEATURES=0 \
 		LWIP_IPV6=0 \
 		all
 
-liblwip2-536-feat.a:
+$(BUILD_ROOT)/liblwip2-536-feat.a: .prepare
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		LWIP_LIB=$@ \
-		BUILD=$(BUILD_ROOT)/build_$@ \
+		LWIP_LIB=$(@F) \
+		BUILD=$(BUILD_ROOT)/build_$(@F) \
 		TCP_MSS=536 \
 		LWIP_FEATURES=1 \
 		LWIP_IPV6=0 \
 		all
 
-liblwip2-1460-feat.a:
+$(BUILD_ROOT)/liblwip2-1460-feat.a: .prepare
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		LWIP_LIB=$@ \
-		BUILD=$(BUILD_ROOT)/build_$@ \
+		LWIP_LIB=$(@F) \
+		BUILD=$(BUILD_ROOT)/build_$(@F) \
 		TCP_MSS=1460 \
 		LWIP_FEATURES=1 \
 		LWIP_IPV6=0 \
 		all
 
-liblwip6-536-feat.a:
+$(BUILD_ROOT)/liblwip6-536-feat.a: .prepare
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		LWIP_LIB=$@ \
-		BUILD=$(BUILD_ROOT)/build_$@ \
+		LWIP_LIB=$(@F) \
+		BUILD=$(BUILD_ROOT)/build_$(@F) \
 		TCP_MSS=536 \
 		LWIP_FEATURES=1 \
 		LWIP_IPV6=1 \
 		all
 
-liblwip6-1460-feat.a:
+$(BUILD_ROOT)/liblwip6-1460-feat.a: .prepare
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		LWIP_LIB=$@ \
-		BUILD=$(BUILD_ROOT)/build_$@ \
+		LWIP_LIB=$(@F) \
+		BUILD=$(BUILD_ROOT)/build_$(@F) \
 		TCP_MSS=1460 \
 		LWIP_FEATURES=1 \
 		LWIP_IPV6=1 \
 		all
+
+BUILD_TARGETS = $(addprefix $(BUILD_ROOT)/,$(TARGETS))
+INSTALL_TARGETS = $(addprefix $(LIBS)/,$(TARGETS))
+$(INSTALL_TARGETS): $(BUILD_TARGETS)
+	@cp -u $< $@
+
+build: $(BUILD_TARGETS)
+install: $(INSTALL_TARGETS)
 
 clean:
 	rm -r $(BUILD_ROOT)
 
-all: $(TARGETS)
+all: $(INSTALL_TARGETS)
