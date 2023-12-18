@@ -23,3 +23,5 @@ $(DIRS): $(SRC)
 
 $(OBJ): | $(DIRS)
 all: $(BUILD) $(OBJ)
+
+.DEFAULT: all

@@ -2,10 +2,10 @@ ifndef PREFIX
 $(error "$$PREFIX must be set to esp8266 Core root directory")
 endif
 
-export ROOT = $(shell git rev-parse --show-toplevel)
+export ROOT := $(shell git rev-parse --show-toplevel)
 
-export target = arduino
-export DEFINE_TARGET = ARDUINO
+export target := arduino
+export DEFINE_TARGET := ARDUINO
 
 export TOOLS ?= $(PREFIX)/tools/xtensa-lx106-elf/bin/xtensa-lx106-elf-
 export SDK ?= $(PREFIX)/tools/sdk
@@ -25,71 +25,85 @@ include makefiles/Makefile.prepare-lwip2
 
 $(BUILD_ROOT)/liblwip2-536.a: .prepare
 	$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		LWIP_LIB=$(@F) \
-		BUILD=$(BUILD_ROOT)/build_$(@F) \
 		TCP_MSS=536 \
 		LWIP_FEATURES=0 \
 		LWIP_IPV6=0 \
-		all
+		$@
 
 $(BUILD_ROOT)/liblwip2-1460.a: .prepare
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		LWIP_LIB=$(@F) \
-		BUILD=$(BUILD_ROOT)/build_$(@F) \
 		TCP_MSS=1460 \
 		LWIP_FEATURES=0 \
 		LWIP_IPV6=0 \
-		all
+		$@
 
 $(BUILD_ROOT)/liblwip2-536-feat.a: .prepare
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		LWIP_LIB=$(@F) \
-		BUILD=$(BUILD_ROOT)/build_$(@F) \
 		TCP_MSS=536 \
 		LWIP_FEATURES=1 \
 		LWIP_IPV6=0 \
-		all
+		$@
 
 $(BUILD_ROOT)/liblwip2-1460-feat.a: .prepare
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		LWIP_LIB=$(@F) \
-		BUILD=$(BUILD_ROOT)/build_$(@F) \
 		TCP_MSS=1460 \
 		LWIP_FEATURES=1 \
 		LWIP_IPV6=0 \
-		all
+		$@
 
 $(BUILD_ROOT)/liblwip6-536-feat.a: .prepare
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		LWIP_LIB=$(@F) \
-		BUILD=$(BUILD_ROOT)/build_$(@F) \
 		TCP_MSS=536 \
 		LWIP_FEATURES=1 \
 		LWIP_IPV6=1 \
-		all
+		$@
 
 $(BUILD_ROOT)/liblwip6-1460-feat.a: .prepare
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		LWIP_LIB=$(@F) \
-		BUILD=$(BUILD_ROOT)/build_$(@F) \
 		TCP_MSS=1460 \
 		LWIP_FEATURES=1 \
 		LWIP_IPV6=1 \
-		all
+		$@
 
 BUILD_TARGETS = $(addprefix $(BUILD_ROOT)/,$(TARGETS))
 INSTALL_TARGETS = $(addprefix $(LIBS)/,$(TARGETS))
 $(INSTALL_TARGETS): $(BUILD_TARGETS)
 	@cp -u $< $@
 
+ARCH_HEADERS = \
+	$(ROOT)/glue-lwip/arch/cc.h \
+	$(ROOT)/glue-lwip/arduino/lwipopts.h
+
+INSTALL_ARCH_HEADERS = $(subst $(ROOT)/glue-lwip/,$(SDK)/lwip2/include/,$(ARCH_HEADERS))
+$(INSTALL_ARCH_HEADERS): $(ARCH_HEADERS)
+	@cp -u $< $@
+
+GLUE_HEADERS := \
+	$(ROOT)/glue/glue.h \
+	$(ROOT)/glue/gluedebug.h
+
+INSTALL_GLUE_HEADERS = $(addprefix $(SDK)/lwip2/include/,$(notdir $(GLUE_HEADERS)))
+$(INSTALL_GLUE_HEADERS): $(GLUE_HEADERS)
+	@cp -u $< $@
+
+INSTALL_BUILD_HEADERS = $(addprefix $(SDK)/lwip2/include/,$(notdir $(BUILD_HEADERS)))
+$(INSTALL_BUILD_HEADERS): $(BUILD_HEADERS)
+	@cp -u $< $@
+
+BUILD_HEADERS := \
+	$(BUILD_ROOT)/lwip-git-hash.h \
+	$(BUILD_ROOT)/lwip-err-t.h
+
 LWIP_INCLUDE = $(LWIP_ROOT)/src/include
-BUILD_HEADERS = \
+LWIP_HEADERS = \
 	$(LWIP_INCLUDE)/lwip/apps/sntp.h \
 	$(wildcard $(LWIP_INCLUDE)/lwip/*.h)
-INSTALL_HEADERS = \
-	$(BUILD_HEADERS:$(LWIP_INCLUDE)=$(SDK)/lwip2/include)
-$(INSTALL_HEADERS): $(BUILD_HEADERS)
-	cp -u $< $@
+
+INSTALL_LWIP_HEADERS = $(subst $(LWIP_INCLUDE),$(SDK)/lwip2/include,$(LWIP_HEADERS))
+$(INSTALL_LWIP_HEADERS): $(LWIP_HEADERS)
+	@cp -u $< $@
+
+INSTALL_HEADERS = $(INSTALL_ARCH_HEADERS) $(INSTALL_GLUE_HEADERS) $(INSTALL_BUILD_HEADERS) $(INSTALL_LWIP_HEADERS)
 
 build: $(BUILD_TARGETS)
 install: $(INSTALL_TARGETS) $(INSTALL_HEADERS)
@@ -97,4 +111,4 @@ install: $(INSTALL_TARGETS) $(INSTALL_HEADERS)
 clean:
 	rm -r $(BUILD_ROOT)
 
-all: $(INSTALL_TARGETS)
+all: $(INSTALL_TARGETS) $(INSTALL_HEADERS)

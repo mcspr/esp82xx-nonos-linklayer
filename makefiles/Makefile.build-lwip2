@@ -1,25 +1,20 @@
 include makefiles/include/version.mk
 include makefiles/include/defs.mk
 
+export BUILD
+export LWIP_LIB
+
 GLUE_GIT_HEAD = $(ROOT)/.git/HEAD
 LWIP_GIT_HEAD = $(LWIP_ROOT)/.git/HEAD
 LWIP_GIT_REPO = https://github.com/lwip-tcpip/lwip
 
-.PHONY: glue-esp glue lwip2 archive
-
-glue-esp:
-	$(MAKE) -f makefiles/Makefile.glue-esp all
-
-glue-lwip: glue-esp
-	$(MAKE) -f makefiles/Makefile.glue-lwip all
-
-lwip2: glue-esp glue-lwip
-	$(MAKE) -C $(LWIP_ROOT)/src -f $(ROOT)/makefiles/Makefile.lwip2 all
-
-archive: lwip2
-	$(MAKE) -f makefiles/Makefile.archive-lwip2 $(BUILD_ROOT)/$(LWIP_LIB)
-
-all: archive
+$(BUILD_ROOT)/%.a: LWIP_LIB = $(@F)
+$(BUILD_ROOT)/%.a: BUILD = $(BUILD_ROOT)/build_$(@F)
+$(BUILD_ROOT)/%.a:
+	$(MAKE) -f makefiles/Makefile.glue-esp
+	$(MAKE) -f makefiles/Makefile.glue-lwip
+	$(MAKE) -C $(LWIP_ROOT)/src -f $(ROOT)/makefiles/Makefile.lwip2
+	$(MAKE) -f makefiles/Makefile.archive-lwip2 $@
 
 section-show:
 	@for i in $(IRAM); do \
