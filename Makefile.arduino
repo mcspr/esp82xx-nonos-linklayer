@@ -9,7 +9,7 @@ export DEFINE_TARGET = ARDUINO
 
 export TOOLS ?= $(PREFIX)/tools/xtensa-lx106-elf/bin/xtensa-lx106-elf-
 export SDK ?= $(PREFIX)/tools/sdk
-export LIBS ?= $(PREFIX)/tools/sdk/libs
+export LIBS ?= $(PREFIX)/tools/sdk/lib
 
 export LWIP_ROOT ?= $(ROOT)/lwip2-src
 
