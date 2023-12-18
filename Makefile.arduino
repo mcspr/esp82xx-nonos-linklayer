@@ -17,7 +17,7 @@ export LWIP_ESP ?= glue-esp/lwip-1.4-arduino/include
 export BUILD_ROOT ?= $(ROOT)/build
 
 TARGETS = liblwip2-536.a liblwip2-536-feat.a liblwip6-536-feat.a liblwip2-1460.a liblwip2-1460-feat.a liblwip6-1460-feat.a 
-.PHONY: .prepare clean $(TARGETS)
+.PHONY: .prepare clean build install
 
 include makefiles/Makefile.prepare-lwip2
 
@@ -82,8 +82,17 @@ INSTALL_TARGETS = $(addprefix $(LIBS)/,$(TARGETS))
 $(INSTALL_TARGETS): $(BUILD_TARGETS)
 	@cp -u $< $@
 
+LWIP_INCLUDE = $(LWIP_ROOT)/src/include
+BUILD_HEADERS = \
+	$(LWIP_INCLUDE)/lwip/apps/sntp.h \
+	$(wildcard $(LWIP_INCLUDE)/lwip/*.h)
+INSTALL_HEADERS = \
+	$(BUILD_HEADERS:$(LWIP_INCLUDE)=$(SDK)/lwip2/include)
+$(INSTALL_HEADERS): $(BUILD_HEADERS)
+	cp -u $< $@
+
 build: $(BUILD_TARGETS)
-install: $(INSTALL_TARGETS)
+install: $(INSTALL_TARGETS) $(INSTALL_HEADERS)
 
 clean:
 	rm -r $(BUILD_ROOT)
