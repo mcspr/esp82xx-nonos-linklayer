@@ -8,6 +8,7 @@ $(error must provide SDK path)
 endif
 
 SRC = \
+	glue/uprint.c \
 	glue-lwip/lwip-git.c \
 	glue-lwip/esp-ping.c \
 	glue-lwip/espconn.c \
