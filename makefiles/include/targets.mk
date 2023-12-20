@@ -85,7 +85,7 @@ GLUE_HEADERS = \
 	$(BUILD_HEADERS) \
 	$(ROOT)/glue/glue.h \
 	$(ROOT)/glue/gluedebug.h \
-	$(ROOT)/glue-lwip/arduino/lwipopts.h \
+	$(ROOT)/glue-lwip/$(target)/lwipopts.h \
 	$(ROOT)/glue-lwip/lwip/apps-esp/dhcpserver.h \
 	$(ROOT)/glue-lwip/lwip/apps-esp/espconn.h
 
