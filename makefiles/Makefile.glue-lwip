@@ -34,10 +34,3 @@ include makefiles/include/rules.mk
 
 -include $(BUILD)/glue/*.d
 -include $(BUILD)/glue-lwip/*.d
-
-$(BUILD)/glue-lwip:
-	@mkdir -p $@
-
-all: $(OBJ)
-
-$(OBJ): $(SRC) $(BUILD_ROOT)/user_config.h $(BUILD_ROOT)/lwip-err-t.h $(BUILD_ROOT)/lwip-git-hash.h

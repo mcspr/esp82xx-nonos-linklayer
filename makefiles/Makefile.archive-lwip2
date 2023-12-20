@@ -4,6 +4,8 @@ $(BUILD)/$(LWIP_LIB): $(OBJ)
 	$(AR) cru $@ $?
 
 $(BUILD_ROOT)/$(LWIP_LIB): $(BUILD)/$(LWIP_LIB)
-	cp $< $@
+	@cp $< $@
 
 all: $(BUILD_ROOT)/$(LWIP_LIB)
+
+include $(ROOT)/makefiles/include/defs.mk

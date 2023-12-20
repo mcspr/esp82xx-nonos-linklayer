@@ -25,6 +25,3 @@ include $(ROOT)/makefiles/include/rules.mk
 -include $(BUILD)/*/*.d
 -include $(BUILD)/*/*/*.d
 -include $(BUILD)/*/*/*/*.d
-
-$(OBJ): $(SRC) $(BUILD_ROOT)/lwip-err-t.h $(BUILD_ROOT)/lwip-git-hash.h $(BUILD_ROOT)/user_config.h
-all: $(OBJ)

@@ -4,40 +4,10 @@ include makefiles/include/defs.mk
 export BUILD
 export LWIP_LIB
 
-GLUE_GIT_HEAD = $(ROOT)/.git/HEAD
-LWIP_GIT_HEAD = $(LWIP_ROOT)/.git/HEAD
-LWIP_GIT_REPO = https://github.com/lwip-tcpip/lwip
-
 $(BUILD_ROOT)/%.a: LWIP_LIB = $(@F)
 $(BUILD_ROOT)/%.a: BUILD = $(BUILD_ROOT)/build_$(@F)
 $(BUILD_ROOT)/%.a:
-	$(MAKE) -f makefiles/Makefile.glue-esp
-	$(MAKE) -f makefiles/Makefile.glue-lwip
-	$(MAKE) -C $(LWIP_ROOT)/src -f $(ROOT)/makefiles/Makefile.lwip2
+	$(MAKE) -f makefiles/Makefile.glue-esp build
+	$(MAKE) -f makefiles/Makefile.glue-lwip build
+	$(MAKE) -C $(LWIP_ROOT)/src -f $(ROOT)/makefiles/Makefile.lwip2 build
 	$(MAKE) -f makefiles/Makefile.archive-lwip2 $@
-
-section-show:
-	@for i in $(IRAM); do \
-		echo  $$i \\t\\t `$(OD) -t $(LWIP_LIB_RELEASE) | grep " F .* $${i}$$"`; \
-	done; true
-
-install: upstream $(AUTO) $(LWIP_LIB_RELEASE)
-	rm -rf $(LWIP_INCLUDES_RELEASE)
-	mkdir -p $(LWIP_INCLUDES_RELEASE)
-	cp -a lwip2-src/src/include/* $(LWIP_INCLUDES_RELEASE)
-	cp -a glue/glue.h glue/gluedebug.h glue-lwip/lwip-git-hash.h glue-lwip/lwip-err-t.h glue-lwip/arch $(LWIP_INCLUDES_RELEASE)
-	echo "// this file will be overwritten upon lwip2 rebuild" > $(LWIP_INCLUDES_RELEASE)/lwipopts.h
-	echo "#ifndef __CUSTOM_EXTRA_DEFINES__" >> $(LWIP_INCLUDES_RELEASE)/lwipopts.h
-	echo "#define __CUSTOM_EXTRA_DEFINES__" >> $(LWIP_INCLUDES_RELEASE)/lwipopts.h
-	echo "$(CUSTOM_EXTRA_DEFINES)" >> $(LWIP_INCLUDES_RELEASE)/lwipopts.h
-	echo "#endif" >> $(LWIP_INCLUDES_RELEASE)/lwipopts.h
-	cat glue-lwip/$(target)/lwipopts.h >> $(LWIP_INCLUDES_RELEASE)/lwipopts.h
-	cp -a glue-lwip/lwip/apps-esp/dhcpserver.h $(LWIP_INCLUDES_RELEASE)
-	echo "warning: this directory is re/over/written from lwip2 builder upon lwip2 rebuild" > $(LWIP_INCLUDES_RELEASE)/README.md
-ifneq ($(target),open)
-	touch $(LWIP_INCLUDES_RELEASE)/espconn.h
-endif
-
-clean:
-	rm -rf $(BUILD) $(LWIP_LIB) $(AUTO)
-	cd lwip2-src; git checkout -f -- src; git clean -f -- src;

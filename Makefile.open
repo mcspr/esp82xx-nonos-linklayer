@@ -1,6 +1,6 @@
 
 SDK=$(PREFIX)/xtensa-lx106-elf/sysroot/usr
-LWIP14_INCLUDE_DIR=$(PREFIX)/../sdk/third_party/include
+export LWIP14_INCLUDE_DIR=$(PREFIX)/../sdk/third_party/include
 LWIP_LIB_RELEASE_DIR=$(SDK)/lib
 LWIP_INCLUDES_RELEASE=$(SDK)/include/lwip2
 
@@ -23,7 +23,6 @@ $(shell makefiles/patch-non-local-includes \
 			target=open \
 			DEFINE_TARGET=OPENSDK \
 			SDK=$(SDK) \
-			LWIP_ESP=$(LWIP14_INCLUDE_DIR) \
 			LWIP_LIB=liblwip$$((2+4*v6))-$$mss$$featname.a \
 			LWIP_LIB_RELEASE=$(LWIP_LIB_RELEASE_DIR)/liblwip$$((2+4*v6))-$$mss$$featname.a \
 			LWIP_INCLUDES_RELEASE=$(LWIP_INCLUDES_RELEASE) \

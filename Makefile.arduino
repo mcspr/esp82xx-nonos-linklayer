@@ -1,107 +1,133 @@
+.PHONY: clean build install
+.DEFAULT: all
+
 ifndef PREFIX
 $(error "$$PREFIX must be set to esp8266 Core root directory")
 endif
 
-export ROOT := $(shell git rev-parse --show-toplevel)
-
-export target := arduino
-export DEFINE_TARGET := ARDUINO
+include makefiles/include/common.mk
 
 export TOOLS ?= $(PREFIX)/tools/xtensa-lx106-elf/bin/xtensa-lx106-elf-
 export SDK ?= $(PREFIX)/tools/sdk
 export LIBS ?= $(PREFIX)/tools/sdk/lib
 
-export LWIP_ROOT ?= $(ROOT)/lwip2-src
+export LWIP14_INCLUDE_DIR ?= $(ROOT)/glue-esp/lwip-1.4-arduino/include
 
-export LWIP_ESP ?= glue-esp/lwip-1.4-arduino/include
-export BUILD_ROOT ?= $(ROOT)/build
+export target = arduino
+export DEFINE_TARGET = ARDUINO
 
-TARGETS = liblwip2-536.a liblwip2-536-feat.a liblwip6-536-feat.a liblwip2-1460.a liblwip2-1460-feat.a liblwip6-1460-feat.a 
-.PHONY: .prepare clean build install
+TARGETS = \
+	liblwip2-536.a \
+	liblwip2-536-feat.a \
+	liblwip6-536-feat.a \
+	liblwip2-1460.a \
+	liblwip2-1460-feat.a \
+	liblwip6-1460-feat.a
 
-include makefiles/Makefile.prepare-lwip2
+BUILD_TARGETS = $(addprefix $(BUILD_ROOT)/,$(TARGETS))
 
-.prepare: $(LWIP_ROOT)/.patched $(LWIP_ROOT)/.git/HEAD $(BUILD_ROOT)/lwip-err-t.h $(BUILD_ROOT)/lwip-git-hash.h
+BUILD_HEADERS = $(BUILD_ROOT)/lwip-git-hash.h $(BUILD_ROOT)/lwip-err-t.h
 
-$(BUILD_ROOT)/liblwip2-536.a: .prepare
+$(BUILD_TARGETS): $(BUILD_ROOT)/user_config.h $(BUILD_HEADERS) | $(BUILD_ROOT)
+
+$(BUILD_ROOT):
+	@mkdir -p $@
+
+$(BUILD_ROOT)/user_config.h:
+	@touch $@
+
+$(BUILD_ROOT)/lwip-err-t.h: $(LWIP14_INCLUDE_DIR)/arch/cc.h | $(BUILD_ROOT)
+	@/usr/bin/env bash makefiles/make-err-t $< > $@
+
+$(BUILD_ROOT)/lwip-git-hash.h: $(GLUE_GIT_HEAD) $(LWIP_GIT_HEAD) | $(BUILD_ROOT)
+	@/usr/bin/env bash makefiles/make-lwip-hash $(LWIP_ROOT) > $@
+
+$(BUILD_ROOT)/liblwip2-536.a:
 	$(MAKE) -f makefiles/Makefile.build-lwip2 \
 		TCP_MSS=536 \
 		LWIP_FEATURES=0 \
 		LWIP_IPV6=0 \
 		$@
 
-$(BUILD_ROOT)/liblwip2-1460.a: .prepare
+$(BUILD_ROOT)/liblwip2-1460.a:
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
 		TCP_MSS=1460 \
 		LWIP_FEATURES=0 \
 		LWIP_IPV6=0 \
 		$@
 
-$(BUILD_ROOT)/liblwip2-536-feat.a: .prepare
+$(BUILD_ROOT)/liblwip2-536-feat.a:
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
 		TCP_MSS=536 \
 		LWIP_FEATURES=1 \
 		LWIP_IPV6=0 \
 		$@
 
-$(BUILD_ROOT)/liblwip2-1460-feat.a: .prepare
+$(BUILD_ROOT)/liblwip2-1460-feat.a:
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
 		TCP_MSS=1460 \
 		LWIP_FEATURES=1 \
 		LWIP_IPV6=0 \
 		$@
 
-$(BUILD_ROOT)/liblwip6-536-feat.a: .prepare
+$(BUILD_ROOT)/liblwip6-536-feat.a:
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
 		TCP_MSS=536 \
 		LWIP_FEATURES=1 \
 		LWIP_IPV6=1 \
 		$@
 
-$(BUILD_ROOT)/liblwip6-1460-feat.a: .prepare
+$(BUILD_ROOT)/liblwip6-1460-feat.a:
 	@$(MAKE) -f makefiles/Makefile.build-lwip2 \
 		TCP_MSS=1460 \
 		LWIP_FEATURES=1 \
 		LWIP_IPV6=1 \
 		$@
 
-BUILD_TARGETS = $(addprefix $(BUILD_ROOT)/,$(TARGETS))
+ifeq ($(V), 0)
+VERBCOPY = @echo "CP $@"; 
+else
+VERBCOPY =
+endif
+
+COPY = $(VERBCOPY) cp
+
 INSTALL_TARGETS = $(addprefix $(LIBS)/,$(TARGETS))
 $(INSTALL_TARGETS): $(BUILD_TARGETS)
-	@cp -u $< $@
+	$(COPY) -u $< $@
+
+SDK_HEADERS_ROOT = $(SDK)/lwip2/include
 
 ARCH_HEADERS = \
 	$(ROOT)/glue-lwip/arch/cc.h \
 	$(ROOT)/glue-lwip/arduino/lwipopts.h
 
-INSTALL_ARCH_HEADERS = $(subst $(ROOT)/glue-lwip/,$(SDK)/lwip2/include/,$(ARCH_HEADERS))
+INSTALL_ARCH_HEADERS = $(subst $(ROOT)/glue-lwip/,$(SDK_HEADERS_ROOT)/,$(ARCH_HEADERS))
 $(INSTALL_ARCH_HEADERS): $(ARCH_HEADERS)
-	@cp -u $< $@
+	$(COPY) -u $< $@
 
 GLUE_HEADERS := \
 	$(ROOT)/glue/glue.h \
-	$(ROOT)/glue/gluedebug.h
+	$(ROOT)/glue/gluedebug.h \
+	$(ROOT)/glue-lwip/lwip/apps-esp/dhcpserver.h \
+	$(ROOT)/glue-lwip/lwip/apps-esp/espconn.h
 
-INSTALL_GLUE_HEADERS = $(addprefix $(SDK)/lwip2/include/,$(notdir $(GLUE_HEADERS)))
+INSTALL_GLUE_HEADERS = $(addprefix $(SDK_HEADERS_ROOT)/,$(notdir $(GLUE_HEADERS)))
 $(INSTALL_GLUE_HEADERS): $(GLUE_HEADERS)
-	@cp -u $< $@
+	$(COPY) -u $< $@
 
-INSTALL_BUILD_HEADERS = $(addprefix $(SDK)/lwip2/include/,$(notdir $(BUILD_HEADERS)))
+INSTALL_BUILD_HEADERS = $(addprefix $(SDK_HEADERS_ROOT)/,$(notdir $(BUILD_HEADERS)))
 $(INSTALL_BUILD_HEADERS): $(BUILD_HEADERS)
-	@cp -u $< $@
-
-BUILD_HEADERS := \
-	$(BUILD_ROOT)/lwip-git-hash.h \
-	$(BUILD_ROOT)/lwip-err-t.h
+	$(COPY) -u $< $@
 
 LWIP_INCLUDE = $(LWIP_ROOT)/src/include
 LWIP_HEADERS = \
 	$(LWIP_INCLUDE)/lwip/apps/sntp.h \
 	$(wildcard $(LWIP_INCLUDE)/lwip/*.h)
 
-INSTALL_LWIP_HEADERS = $(subst $(LWIP_INCLUDE),$(SDK)/lwip2/include,$(LWIP_HEADERS))
+INSTALL_LWIP_HEADERS = $(subst $(LWIP_INCLUDE),$(SDK_HEADERS_ROOT)/,$(LWIP_HEADERS))
 $(INSTALL_LWIP_HEADERS): $(LWIP_HEADERS)
-	@cp -u $< $@
+	$(COPY) -u $< $@
 
 INSTALL_HEADERS = $(INSTALL_ARCH_HEADERS) $(INSTALL_GLUE_HEADERS) $(INSTALL_BUILD_HEADERS) $(INSTALL_LWIP_HEADERS)
 
@@ -109,6 +135,10 @@ build: $(BUILD_TARGETS)
 install: $(INSTALL_TARGETS) $(INSTALL_HEADERS)
 
 clean:
-	rm -r $(BUILD_ROOT)
+	rm -r $(BUILD_ROOT) || echo -n ;
+	rm -r $(SDK_HEADERS_ROOT) || echo -n ;
+	for lib in $(INSTALL_TARGETS) ; do \
+		rm $$lib || echo -n; \
+	done
 
 all: $(INSTALL_TARGETS) $(INSTALL_HEADERS)

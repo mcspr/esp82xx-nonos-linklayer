@@ -1,12 +1,9 @@
-.PHONY: .mkdir
+.PHONY: build clean
 
 OBJ := $(patsubst %.c,$(BUILD)/%.o,$(SRC))
 
 $(BUILD):
 	@mkdir -p $(BUILD)
-
-$(BUILD_ROOT)/user_config.h:
-	@touch $@
 
 $(OBJ): $(BUILD)/%.o: %.c
 	$(CC) \
@@ -16,12 +13,13 @@ $(OBJ): $(BUILD)/%.o: %.c
         $(BUILD_INCLUDES) \
         $< -o $@
 
-DIRS := $(sort $(dir $(OBJ)))
-$(info $(DIRS))
-$(DIRS): $(SRC)
+OBJDIRS := $(sort $(dir $(OBJ)))
+$(OBJDIRS): $(SRC)
 	mkdir -p $@
 
-$(OBJ): | $(DIRS)
-all: $(BUILD) $(OBJ)
+$(OBJ): | $(OBJDIRS) $(BUILD)
+build: $(OBJ)
 
-.DEFAULT: all
+clean:
+	rm -r $(OBJDIRS) || echo -n
+	rm $(OBJ) || echo -n

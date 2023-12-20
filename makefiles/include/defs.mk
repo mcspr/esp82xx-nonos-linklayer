@@ -1,6 +1,5 @@
-V ?= 0
 ifeq ($(V), 0)
-VERBC = @echo "C  $@";
+VERBC = @echo "CC $@";
 VERBAR = @echo "AR $@";
 else
 VERBC =
@@ -12,8 +11,6 @@ CC = $(VERBC) $(TOOLS)gcc
 AR = $(VERBAR) $(TOOLS)ar
 OC = $(TOOLS)objcopy
 OD = $(TOOLS)objdump
-
-BUILD ?= build
 
 BUILD_FLAGS += \
 	-std=gnu99 \
