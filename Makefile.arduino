@@ -33,7 +33,7 @@ $(BUILD_TARGETS): $(BUILD_ROOT)/user_config.h $(BUILD_HEADERS) | $(BUILD_ROOT)
 $(BUILD_ROOT):
 	@mkdir -p $@
 
-$(BUILD_ROOT)/user_config.h:
+$(BUILD_ROOT)/user_config.h: | $(BUILD_ROOT)
 	@touch $@
 
 $(BUILD_ROOT)/lwip-err-t.h: $(LWIP14_INCLUDE_DIR)/arch/cc.h | $(BUILD_ROOT)
@@ -85,7 +85,7 @@ $(BUILD_ROOT)/liblwip6-1460-feat.a:
 		$@
 
 ifeq ($(V), 0)
-VERBCOPY = @echo "CP $@"; 
+VERBCOPY = @echo "CP $@";
 else
 VERBCOPY =
 endif
@@ -93,52 +93,58 @@ endif
 COPY = $(VERBCOPY) cp
 
 INSTALL_TARGETS = $(addprefix $(LIBS)/,$(TARGETS))
-$(INSTALL_TARGETS): $(BUILD_TARGETS)
-	$(COPY) -u $< $@
+$(INSTALL_TARGETS): $(LIBS)/%.a: $(BUILD_ROOT)/%.a
+	$(COPY) $< $@
 
 SDK_HEADERS_ROOT = $(SDK)/lwip2/include
 
-ARCH_HEADERS = \
-	$(ROOT)/glue-lwip/arch/cc.h \
-	$(ROOT)/glue-lwip/arduino/lwipopts.h
+$(SDK_HEADERS_ROOT): $(ROOT)/glue-lwip/arch/cc.h
+	$(COPY) $< $@
 
-INSTALL_ARCH_HEADERS = $(subst $(ROOT)/glue-lwip/,$(SDK_HEADERS_ROOT)/,$(ARCH_HEADERS))
-$(INSTALL_ARCH_HEADERS): $(ARCH_HEADERS)
-	$(COPY) -u $< $@
-
-GLUE_HEADERS := \
+GLUE_HEADERS = \
 	$(ROOT)/glue/glue.h \
 	$(ROOT)/glue/gluedebug.h \
+	$(ROOT)/glue-lwip/arduino/lwipopts.h \
 	$(ROOT)/glue-lwip/lwip/apps-esp/dhcpserver.h \
 	$(ROOT)/glue-lwip/lwip/apps-esp/espconn.h
 
-INSTALL_GLUE_HEADERS = $(addprefix $(SDK_HEADERS_ROOT)/,$(notdir $(GLUE_HEADERS)))
-$(INSTALL_GLUE_HEADERS): $(GLUE_HEADERS)
-	$(COPY) -u $< $@
+define COPY_HEADERS_PLAIN
+$$(addprefix $$(SDK_HEADERS_ROOT)/,$$(notdir $(1))): $(1)
+	$$(COPY) $$< $$@
+endef
+$(foreach header,$(GLUE_HEADERS),$(eval $(call COPY_HEADERS_PLAIN,$(header))))
 
-INSTALL_BUILD_HEADERS = $(addprefix $(SDK_HEADERS_ROOT)/,$(notdir $(BUILD_HEADERS)))
-$(INSTALL_BUILD_HEADERS): $(BUILD_HEADERS)
-	$(COPY) -u $< $@
+INSTALL_GLUE_HEADERS = $(addprefix $(SDK_HEADERS_ROOT)/,$(notdir $(GLUE_HEADERS)))
 
 LWIP_INCLUDE = $(LWIP_ROOT)/src/include
 LWIP_HEADERS = \
 	$(LWIP_INCLUDE)/lwip/apps/sntp.h \
 	$(wildcard $(LWIP_INCLUDE)/lwip/*.h)
 
-INSTALL_LWIP_HEADERS = $(subst $(LWIP_INCLUDE),$(SDK_HEADERS_ROOT)/,$(LWIP_HEADERS))
-$(INSTALL_LWIP_HEADERS): $(LWIP_HEADERS)
-	$(COPY) -u $< $@
+define COPY_HEADERS_LWIP
+$$(subst $$(LWIP_INCLUDE)/,$$(SDK_HEADERS_ROOT)/,$(1)): $(1)
+	$$(COPY) $$< $$@
+endef
+$(foreach header,$(LWIP_HEADERS),$(eval $(call COPY_HEADERS_LWIP,$(header))))
 
-INSTALL_HEADERS = $(INSTALL_ARCH_HEADERS) $(INSTALL_GLUE_HEADERS) $(INSTALL_BUILD_HEADERS) $(INSTALL_LWIP_HEADERS)
+INSTALL_LWIP_HEADERS = $(subst $(LWIP_INCLUDE)/,$(SDK_HEADERS_ROOT)/,$(LWIP_HEADERS))
+
+INSTALL_HEADERS = $(INSTALL_LWIP_HEADERS) $(INSTALL_GLUE_HEADERS)
+
+INSTALL_DIRS = $(sort $(dir $(INSTALL_HEADERS)))
+$(INSTALL_DIRS):
+	mkdir -p $@
+
+$(INSTALL_HEADERS): | $(INSTALL_DIRS)
 
 build: $(BUILD_TARGETS)
 install: $(INSTALL_TARGETS) $(INSTALL_HEADERS)
 
 clean:
-	rm -r $(BUILD_ROOT) || echo -n ;
-	rm -r $(SDK_HEADERS_ROOT) || echo -n ;
-	for lib in $(INSTALL_TARGETS) ; do \
-		rm $$lib || echo -n; \
+	-rm -r $(BUILD_ROOT)
+	-rm -r $(SDK_HEADERS_ROOT)
+	-for lib in $(INSTALL_TARGETS) ; do \
+		rm $$lib; \
 	done
 
 all: $(INSTALL_TARGETS) $(INSTALL_HEADERS)

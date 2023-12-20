@@ -47,7 +47,8 @@ upstream-open-sdk:
 	$(MAKE) open-sdk
 
 open-sdk:
-	$(MAKE) -f Makefile.open
+	$(MAKE) -f Makefile.open clean
+	$(MAKE) -f Makefile.open install
 
 upstream-arduino:
 	$(MAKE) upstream-lwip
@@ -56,4 +57,5 @@ upstream-arduino:
 	$(MAKE) arduino
 
 arduino:
-	$(MAKE) -f Makefile.arduino
+	$(MAKE) -f Makefile.arduino clean
+	$(MAKE) -f Makefile.arduino install
