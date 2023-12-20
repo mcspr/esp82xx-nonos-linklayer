@@ -98,10 +98,11 @@ $(INSTALL_TARGETS): $(LIBS)/%.a: $(BUILD_ROOT)/%.a
 
 SDK_HEADERS_ROOT = $(SDK)/lwip2/include
 
-$(SDK_HEADERS_ROOT): $(ROOT)/glue-lwip/arch/cc.h
+$(SDK_HEADERS_ROOT)/arch/cc.h: $(ROOT)/glue-lwip/arch/cc.h
 	$(COPY) $< $@
 
 GLUE_HEADERS = \
+	$(BUILD_HEADERS) \
 	$(ROOT)/glue/glue.h \
 	$(ROOT)/glue/gluedebug.h \
 	$(ROOT)/glue-lwip/arduino/lwipopts.h \
@@ -119,7 +120,12 @@ INSTALL_GLUE_HEADERS = $(addprefix $(SDK_HEADERS_ROOT)/,$(notdir $(GLUE_HEADERS)
 LWIP_INCLUDE = $(LWIP_ROOT)/src/include
 LWIP_HEADERS = \
 	$(LWIP_INCLUDE)/lwip/apps/sntp.h \
-	$(wildcard $(LWIP_INCLUDE)/lwip/*.h)
+	$(wildcard $(LWIP_INCLUDE)/netif/*.h) \
+	$(wildcard $(LWIP_INCLUDE)/netif/ppp/*.h) \
+	$(wildcard $(LWIP_INCLUDE)/lwip/*.h) \
+	$(wildcard $(LWIP_INCLUDE)/lwip/apps/*.h) \
+	$(wildcard $(LWIP_INCLUDE)/lwip/priv/*.h) \
+	$(wildcard $(LWIP_INCLUDE)/lwip/prot/*.h)
 
 define COPY_HEADERS_LWIP
 $$(subst $$(LWIP_INCLUDE)/,$$(SDK_HEADERS_ROOT)/,$(1)): $(1)
@@ -129,7 +135,7 @@ $(foreach header,$(LWIP_HEADERS),$(eval $(call COPY_HEADERS_LWIP,$(header))))
 
 INSTALL_LWIP_HEADERS = $(subst $(LWIP_INCLUDE)/,$(SDK_HEADERS_ROOT)/,$(LWIP_HEADERS))
 
-INSTALL_HEADERS = $(INSTALL_LWIP_HEADERS) $(INSTALL_GLUE_HEADERS)
+INSTALL_HEADERS = $(INSTALL_LWIP_HEADERS) $(INSTALL_GLUE_HEADERS) $(SDK_HEADERS_ROOT)/arch/cc.h
 
 INSTALL_DIRS = $(sort $(dir $(INSTALL_HEADERS)))
 $(INSTALL_DIRS):
