@@ -5,7 +5,9 @@ include makefiles/include/version.mk
 .DEFAULT: all
 
 LWIP_GIT_REPO = https://github.com/lwip-tcpip/lwip
+
 PATCHES = $(wildcard $(ROOT)/patches/*.patch)
+OPEN_SDK_PATCHES = $(ROOT)/patches/open/sdk-mem-macros.patch
 
 all: arduino
 
@@ -22,21 +24,15 @@ clean-lwip:
 	@git -C $(LWIP_ROOT) clean -f
 	@git -C $(LWIP_ROOT) checkout -f $(UPSTREAM_VERSION)
 
-ifeq ($(V), 0)
-VERBPATCH = @echo "PATCH $$p";
-else
-VERBPATCH =
-endif
-
-PATCH = $(VERBPATCH) patch
-
 patch-lwip:
 	@for p in $(PATCHES); do \
-		$(PATCH) -d $(LWIP_ROOT) -p1 < $$p; \
+		echo "PATCH $$p"; patch -d $(LWIP_ROOT) -p1 < $$p; \
 	done
 
-patch-lwip-open:
-	$(PATCH) -d $(LWIP_ROOT) -p1 < $(ROOT)/patches/open/sdk-mem-macros.patch
+patch-lwip-open: patch-lwip
+	@for p in $(OPEN_SDK_PATCHES); do \
+		echo "PATCH $$p"; patch -d $(LWIP_ROOT) -p1 < $$p; \
+	done
 
 lwip:
 	$(MAKE) update-lwip
@@ -45,7 +41,6 @@ lwip:
 upstream-open-sdk:
 	$(MAKE) upstream-lwip
 	$(MAKE) clean-lwip
-	$(MAKE) patch-lwip
 	$(MAKE) patch-lwip-open
 	$(MAKE) open-sdk
 
