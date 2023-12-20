@@ -1,10 +1,13 @@
 include makefiles/include/common.mk
 include makefiles/include/version.mk
 
-.PHONY: upstream-arduino arduino upstream-open-sdk open-sdk upstream-lwip clean-lwip patch-lwip patch-lwip-open
+.PHONY: upstream-arduino arduino upstream-open-sdk open-sdk upstream-lwip clean-lwip patch-lwip patch-lwip-open all
+.DEFAULT: all
 
 LWIP_GIT_REPO = https://github.com/lwip-tcpip/lwip
 PATCHES = $(wildcard $(ROOT)/patches/*.patch)
+
+all: arduino
 
 upstream-lwip:
 	@if test ! -e "$(LWIP_ROOT)" ; then \
