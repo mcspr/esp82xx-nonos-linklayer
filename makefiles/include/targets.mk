@@ -80,6 +80,13 @@ INSTALL_TARGETS = $(addprefix $(LIBS)/,$(TARGETS))
 $(INSTALL_TARGETS): $(LIBS)/%.a: $(BUILD_ROOT)/%.a
 	$(COPY) $< $@
 
+$(INC)/espconn.h: $(ROOT)/glue-lwip/lwip/apps-esp/espconn.h
+ifeq ($(PREFIX_TARGET), open)
+	$(COPY) $< $@
+else
+	$(GEN) touch $@
+endif
+
 $(INC)/arch/cc.h: $(ROOT)/glue-lwip/arch/cc.h
 	$(COPY) $< $@
 
@@ -87,9 +94,8 @@ GLUE_HEADERS = \
 	$(BUILD_HEADERS) \
 	$(ROOT)/glue/glue.h \
 	$(ROOT)/glue/gluedebug.h \
-	$(ROOT)/glue-lwip/$(target)/lwipopts.h \
-	$(ROOT)/glue-lwip/lwip/apps-esp/dhcpserver.h \
-	$(ROOT)/glue-lwip/lwip/apps-esp/espconn.h
+	$(ROOT)/glue-lwip/$(PREFIX_TARGET)/lwipopts.h \
+	$(ROOT)/glue-lwip/lwip/apps-esp/dhcpserver.h
 
 define COPY_HEADERS_PLAIN
 $$(addprefix $$(INC)/,$$(notdir $(1))): $(1)
@@ -117,7 +123,7 @@ $(foreach header,$(LWIP_HEADERS),$(eval $(call COPY_HEADERS_LWIP,$(header))))
 
 INSTALL_LWIP_HEADERS = $(subst $(LWIP_INCLUDE)/,$(INC)/,$(LWIP_HEADERS))
 
-INSTALL_HEADERS = $(INSTALL_LWIP_HEADERS) $(INSTALL_GLUE_HEADERS) $(INC)/arch/cc.h
+INSTALL_HEADERS = $(INSTALL_LWIP_HEADERS) $(INSTALL_GLUE_HEADERS) $(INC)/arch/cc.h $(INC)/espconn.h
 
 INSTALL_DIRS = $(sort $(dir $(INSTALL_HEADERS)))
 $(INSTALL_DIRS):

@@ -16,7 +16,7 @@ BUILD_INCLUDES = \
 	-I$(SDK)/include \
 	-I$(ROOT)/glue \
 	-I$(ROOT)/glue-lwip \
-	-I$(ROOT)/glue-lwip/$(target) \
+	-I$(ROOT)/glue-lwip/$(PREFIX_TARGET) \
 	-I$(LWIP_ROOT)/src/include
 
 include $(ROOT)/makefiles/include/defs.mk

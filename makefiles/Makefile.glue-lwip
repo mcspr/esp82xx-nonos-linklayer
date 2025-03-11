@@ -16,7 +16,7 @@ SRC = \
 	glue-lwip/espconn_tcp.c \
 	glue-lwip/espconn_udp.c
 
-ifneq ($(target),arduino)
+ifneq ($(PREFIX_TARGET),arduino)
 SRC += \
 	glue-lwip/esp-dhcpserver.c \
 	glue-lwip/esp-time.c \
@@ -27,7 +27,7 @@ BUILD_INCLUDES = \
 	-I$(BUILD_ROOT) \
 	-I$(ROOT)/glue \
 	-I$(ROOT)/glue-lwip \
-	-I$(ROOT)/glue-lwip/$(target) \
+	-I$(ROOT)/glue-lwip/$(PREFIX_TARGET) \
 	-I$(LWIP_ROOT)/src/include \
 	-I$(SDK)/include
 

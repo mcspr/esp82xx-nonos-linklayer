@@ -11,7 +11,7 @@ export INC ?= $(SDK)/include/lwip2
 
 export LWIP14_INCLUDE_DIR=$(PREFIX)/../sdk/third_party/include
 
-export target = open
+export PREFIX_TARGET = open
 export DEFINE_TARGET = OPENSDK
 
 $(shell makefiles/patch-vendor-lwip14 \
