@@ -2,7 +2,11 @@
 .DEFAULT: all
 
 ifndef PREFIX
-$(error "$$PREFIX must be set to esp8266 Core root directory")
+$(error $$PREFIX must be set to esp8266 Core root directory)
+endif
+
+ifeq ($(PREFIX),)
+$(error $$PREFIX cannot be empty)
 endif
 
 include makefiles/include/common.mk

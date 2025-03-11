@@ -29,6 +29,10 @@ BUILD_FLAGS += \
 	-ffunction-sections \
 	-fdata-sections
 
+ifeq ($(DEFINE_TARGET),)
+$(error $$DEFINE_TARGET cannot be empty)
+endif
+
 BUILD_DEFINES = \
 	-U__STRICT_ANSI__ \
 	-D__ets__ \
