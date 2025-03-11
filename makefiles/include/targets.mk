@@ -1,3 +1,7 @@
+ifeq ($(PREFIX_TARGET),)
+$(error $$PREFIX_TARGET cannot be empty)
+endif
+
 TARGETS = \
 	liblwip2-536.a \
 	liblwip2-536-feat.a \
@@ -23,7 +27,7 @@ TARGET_FLAGS_liblwip2-536-feat.a = \
 
 TARGET_FLAGS_liblwip2-1460-feat.a = \
 	TCP_MSS=1460 \
-	LWIP_FEATURES=0 \
+	LWIP_FEATURES=1 \
 	LWIP_IPV6=0
 
 TARGET_FLAGS_liblwip6-536-feat.a = \
@@ -33,7 +37,7 @@ TARGET_FLAGS_liblwip6-536-feat.a = \
 
 TARGET_FLAGS_liblwip6-1460-feat.a = \
 	TCP_MSS=1460 \
-	LWIP_FEATURES=0 \
+	LWIP_FEATURES=1 \
 	LWIP_IPV6=1
 
 BUILD_TARGETS = $(addprefix $(BUILD_ROOT)/,$(TARGETS))
