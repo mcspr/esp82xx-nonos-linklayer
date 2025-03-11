@@ -6,6 +6,36 @@ TARGETS = \
 	liblwip2-1460-feat.a \
 	liblwip6-1460-feat.a
 
+TARGET_FLAGS_liblwip2-536.a = \
+	TCP_MSS=536 \
+	LWIP_FEATURES=0 \
+	LWIP_IPV6=0
+
+TARGET_FLAGS_liblwip2-1460.a = \
+	TCP_MSS=1460 \
+	LWIP_FEATURES=0 \
+	LWIP_IPV6=0
+
+TARGET_FLAGS_liblwip2-536-feat.a = \
+	TCP_MSS=536 \
+	LWIP_FEATURES=1 \
+	LWIP_IPV6=0
+
+TARGET_FLAGS_liblwip2-1460-feat.a = \
+	TCP_MSS=1460 \
+	LWIP_FEATURES=0 \
+	LWIP_IPV6=0
+
+TARGET_FLAGS_liblwip6-536-feat.a = \
+	TCP_MSS=536 \
+	LWIP_FEATURES=1 \
+	LWIP_IPV6=1
+
+TARGET_FLAGS_liblwip6-1460-feat.a = \
+	TCP_MSS=1460 \
+	LWIP_FEATURES=0 \
+	LWIP_IPV6=1
+
 BUILD_TARGETS = $(addprefix $(BUILD_ROOT)/,$(TARGETS))
 
 BUILD_HEADERS = $(BUILD_ROOT)/lwip-git-hash.h $(BUILD_ROOT)/lwip-err-t.h
@@ -32,47 +62,11 @@ $(BUILD_ROOT)/lwip-err-t.h: $(LWIP14_INCLUDE_DIR)/arch/cc.h | $(BUILD_ROOT)
 $(BUILD_ROOT)/lwip-git-hash.h: $(GLUE_GIT_HEAD) $(LWIP_GIT_HEAD) | $(BUILD_ROOT)
 	$(GEN) /usr/bin/env bash makefiles/make-lwip-hash $(LWIP_ROOT) > $@
 
-$(BUILD_ROOT)/liblwip2-536.a:
-	$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		TCP_MSS=536 \
-		LWIP_FEATURES=0 \
-		LWIP_IPV6=0 \
-		$@
-
-$(BUILD_ROOT)/liblwip2-1460.a:
-	$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		TCP_MSS=1460 \
-		LWIP_FEATURES=0 \
-		LWIP_IPV6=0 \
-		$@
-
-$(BUILD_ROOT)/liblwip2-536-feat.a:
-	$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		TCP_MSS=536 \
-		LWIP_FEATURES=1 \
-		LWIP_IPV6=0 \
-		$@
-
-$(BUILD_ROOT)/liblwip2-1460-feat.a:
-	$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		TCP_MSS=1460 \
-		LWIP_FEATURES=1 \
-		LWIP_IPV6=0 \
-		$@
-
-$(BUILD_ROOT)/liblwip6-536-feat.a:
-	$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		TCP_MSS=536 \
-		LWIP_FEATURES=1 \
-		LWIP_IPV6=1 \
-		$@
-
-$(BUILD_ROOT)/liblwip6-1460-feat.a:
-	$(MAKE) -f makefiles/Makefile.build-lwip2 \
-		TCP_MSS=1460 \
-		LWIP_FEATURES=1 \
-		LWIP_IPV6=1 \
-		$@
+define BUILD_TARGET_ARCHIVE
+$$(BUILD_ROOT)/$(1):
+	$$(MAKE) -f makefiles/Makefile.build-lwip2 $$(TARGET_FLAGS_$(1)) $$@
+endef
+$(foreach target,$(TARGETS),$(eval $(call BUILD_TARGET_ARCHIVE,$(target))))
 
 ifeq ($(V), 0)
 VERBCOPY = @echo "CP $@";
