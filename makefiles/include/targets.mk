@@ -85,7 +85,7 @@ $(INSTALL_TARGETS): $(LIBS)/%.a: $(BUILD_ROOT)/%.a
 	$(COPY) $< $@
 
 $(INC)/espconn.h: $(ROOT)/glue-lwip/lwip/apps-esp/espconn.h
-ifeq ($(PREFIX_TARGET), open)
+ifneq ($(PREFIX_TARGET), arduino)
 	$(COPY) $< $@
 else
 	$(GEN) touch $@
@@ -98,8 +98,12 @@ GLUE_HEADERS = \
 	$(BUILD_HEADERS) \
 	$(ROOT)/glue/glue.h \
 	$(ROOT)/glue/gluedebug.h \
-	$(ROOT)/glue-lwip/$(PREFIX_TARGET)/lwipopts.h \
+	$(ROOT)/glue-lwip/$(PREFIX_TARGET)/lwipopts.h
+
+ifneq ($(PREFIX_TARGET), arduino)
+GLUE_HEADERS += \
 	$(ROOT)/glue-lwip/lwip/apps-esp/dhcpserver.h
+endif
 
 define COPY_HEADERS_PLAIN
 $$(addprefix $$(INC)/,$$(notdir $(1))): $(1)
